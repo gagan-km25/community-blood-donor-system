@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block title %}Request #{{ blood_request.pk }} — BloodConnect{% endblock %}
+
+{% block content %}
+<section class="container section">
+  <header class="page-header page-header-row">
+    <div>
+      <h1>Blood request #{{ blood_request.pk }}</h1>
+      <p class="muted">Created {{ blood_request.created_at|date:"d M Y, H:i" }} · last updated {{ blood_request.updated_at|date:"d M Y, H:i" }}</p>
+    </div>
+    {% include "partials/_status_badge.html" with status=blood_request.status label=blood_request.get_status_display %}
+  </header>
+
+  <div class="grid grid-2">
+    <div class="card">
+      <h2>Request details</h2>
+      <dl class="detail-list">
+        <div><dt>Blood group</dt><dd><span class="blood-chip">{{ blood_request.blood_group }}</span></dd></div>
+        <div><dt>Units</dt><dd>{{ blood_request.units_fulfilled }} of {{ blood_request.units_needed }} fulfilled</dd></div>
+        <div><dt>Urgency</dt><dd><span class="badge badge-{{ blood_request.urgency }}">{{ blood_request.get_urgency_display }}</span></dd></div>
+        <div><dt>Hospital</dt><dd>{{ blood_request.hospital_name }}, {{ blood_request.hospital_city }}</dd></div>
+        <div><dt>Needed by</dt><dd>{{ blood_request.needed_by|date:"d M Y, H:i" }}</dd></div>
+        {% if blood_request.patient_name %}
+          <div><dt>Patient</dt><dd>{{ blood_request.patient_name }}</dd></div>
+        {% endif %}
+        <div><dt>Contact number</dt><dd>{{ blood_request.contact_number }}</dd></div>
+        {% if blood_request.notes %}
+          <div><dt>Notes</dt><dd>{{ blood_request.notes }}</dd></div>
+        {% endif %}
+      </dl>
+
+      {% if can_edit %}
+        <div class="btn-row">
+          <a href="{% url 'blood_requests:update_request' blood_request.pk %}" class="btn btn-outline">Edit request</a>
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="card">
+      <h2>Progress actions</h2>
+      {% if blood_request.is_terminal %}
+        <p class="muted">
+          This request is <strong>{{ blood_request.get_status_display|lower }}</strong>
+          (a final state) — no further status changes are possible.
+        </p>
+      {% else %}
+        <p class="muted">Update the status as you make progress. Every change is recorded in the history below.</p>
+
+        {% comment %}
+        next_actions rows are (status_value, button_label, needs_units_input)
+        — defined in blood_requests.views.NEXT_ACTIONS.
+        {% endcomment %}
+        {% for action_value, action_label, needs_units in next_actions %}
+          <form method="post" action="{% url 'blood_requests:update_status' blood_request.pk %}" class="status-action"
+                data-confirm="Change status to '{{ action_label }}'?">
+            {% csrf_token %}
+            <input type="hidden" name="to_status" value="{{ action_value }}">
+            {% if needs_units %}
+              <label for="units-{{ action_value }}" class="units-label">Units received so far</label>
+              <input type="number" id="units-{{ action_value }}" name="units_fulfilled"
+                     min="1" max="{{ blood_request.units_remaining|add:'-1' }}" value="1" class="units-input">
+            {% endif %}
+            <input type="hidden" name="note" value="">
+            <button type="submit" class="btn btn-primary btn-sm">{{ action_label }}</button>
+          </form>
+        {% endfor %}
+
+        {% if can_cancel %}
+          <form method="post" action="{% url 'blood_requests:cancel_request' blood_request.pk %}" class="status-action"
+                data-confirm="Cancel this request? This cannot be undone.">
+            {% csrf_token %}
+            <input type="hidden" name="to_status" value="cancelled">
+            <input type="hidden" name="note" value="">
+            <button type="submit" class="btn btn-danger-outline btn-sm">Cancel request</button>
+          </form>
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card section-top">
+    <h2>Potential donors <span class="badge badge-matched">leads only</span></h2>
+    {% if potential_donors %}
+      <p class="muted">
+        Preliminary matches by blood-group compatibility and city. Eligibility and
+        actual availability must be confirmed by healthcare professionals.
+      </p>
+      <div class="grid grid-4 donor-grid">
+        {% for item in potential_donors %}
+          {% with p=item.profile %}
+            <article class="card donor-card donor-card-light">
+              <div class="blood-drop-badge" aria-hidden="true">{{ p.blood_group }}</div>
+              <h3>{{ p.full_name }}</h3>
+              <p class="muted">📍 {{ p.city }}</p>
+              <p class="donor-phone">
+                {% if item.show_phone %}
+                  📞 <a href="tel:{{ p.phone }}">{{ p.phone }}</a>
+                {% elif p.contact_consent %}
+                  <span class="muted">📞 Contact hidden (log in as requester to view)</span>
+                {% else %}
+                  <span class="muted">📞 Contact not shared</span>
+                {% endif %}
+              </p>
+            </article>
+          {% endwith %}
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <p>No available compatible donors found in {{ blood_request.hospital_city }} right now.
+           Try the <a href="{% url 'donors:search' %}">full donor search</a>.</p>
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="card section-top">
+    <h2>Status history</h2>
+    {% with history_items=blood_request.history.all %}
+      {% if history_items %}
+        <ol class="timeline">
+          {% for h in history_items %}
+            <li>
+              <span class="timeline-dot" aria-hidden="true"></span>
+              <div>
+                <strong>{{ h.get_from_status_display }} → {{ h.get_to_status_display }}</strong>
+                <p class="muted">
+                  {{ h.created_at|date:"d M Y, H:i" }} ·
+                  {% if h.changed_by %}by {{ h.changed_by.username }}{% else %}by system{% endif %}
+                  {% if h.note %} — {{ h.note }}{% endif %}
+                </p>
+              </div>
+            </li>
+          {% endfor %}
+        </ol>
+      {% else %}
+        <p class="muted">No status changes recorded yet.</p>
+      {% endif %}
+    {% endwith %}
+  </div>
+</section>
+{% endblock %}

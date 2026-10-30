@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Page not found — BloodConnect{% endblock %}
+{% block content %}
+<section class="container section error-page">
+  <div class="card empty-state">
+    <span class="empty-icon" aria-hidden="true">🔎</span>
+    <h1>404 — Page not found</h1>
+    <p>The page you are looking for does not exist or may have been moved.</p>
+    <a href="{% url 'dashboard:home' %}" class="btn btn-primary">Back to home</a>
+  </div>
+</section>
+{% endblock %}

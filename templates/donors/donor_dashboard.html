@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Donor dashboard — BloodConnect{% endblock %}
+
+{% block content %}
+<section class="container section">
+  <header class="page-header">
+    <h1>Donor dashboard</h1>
+    <p class="muted">Manage your donor profile and see requests you could potentially help with.</p>
+  </header>
+
+  <div class="grid grid-2">
+    <div class="card">
+      <div class="card-head-row">
+        <h2>Your donor profile</h2>
+        {% if profile.is_active %}
+          <span class="badge badge-fulfilled">Active</span>
+        {% else %}
+          <span class="badge badge-expired">Deactivated</span>
+        {% endif %}
+      </div>
+
+      <dl class="detail-list">
+        <div><dt>Name</dt><dd>{{ profile.full_name }}</dd></div>
+        <div><dt>Blood group</dt><dd><span class="blood-chip">{{ profile.blood_group }}</span></dd></div>
+        <div><dt>City</dt><dd>{{ profile.city }}</dd></div>
+        <div><dt>Availability</dt>
+          <dd>{% if profile.is_available %}<span class="badge badge-fulfilled">Available</span>{% else %}<span class="badge badge-cancelled">Unavailable</span>{% endif %}</dd>
+        </div>
+        <div><dt>Last donation</dt><dd>{{ profile.last_donation_date|default:'—' }}</dd></div>
+        <div><dt>Contact sharing</dt>
+          <dd>{% if profile.contact_consent %}Enabled — logged-in users can see your phone{% else %}Disabled — your phone stays private{% endif %}</dd>
+        </div>
+      </dl>
+
+      <div class="btn-row">
+        <a href="{% url 'donors:my_profile_edit' %}" class="btn btn-primary">Edit profile</a>
+        <form method="post" action="{% url 'donors:my_profile_toggle' %}" class="inline-form"
+              data-confirm="{% if profile.is_active %}Deactivate your donor profile? You will be hidden from search until you reactivate it.{% else %}Reactivate your donor profile?{% endif %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger-outline">
+            {% if profile.is_active %}Deactivate profile{% else %}Reactivate profile{% endif %}
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Potential opportunities</h2>
+      <p class="muted">
+        Open requests your blood group could potentially help
+        {% if profile.is_active %}in {{ profile.city }}{% endif %}.
+      </p>
+
+      {% if not profile.is_active %}
+        <div class="empty-state">
+          <p>Your profile is deactivated — reactivate it to see opportunities.</p>
+        </div>
+      {% elif opportunities %}
+        <ul class="opp-list">
+          {% for req in opportunities %}
+            <li>
+              <span class="blood-chip">{{ req.blood_group }}</span>
+              <div class="opp-info">
+                <strong>{{ req.hospital_name }}</strong>
+                <span class="muted">{{ req.hospital_city }} · needed by {{ req.needed_by|date:"d M Y, H:i" }}</span>
+              </div>
+              <span class="badge badge-{{ req.urgency }}">{{ req.get_urgency_display }}</span>
+            </li>
+          {% endfor %}
+        </ul>
+        <a href="{% url 'blood_requests:requests_board' %}" class="btn btn-outline btn-sm">See the full request board</a>
+      {% else %}
+        <div class="empty-state">
+          <span class="empty-icon" aria-hidden="true">🌱</span>
+          <p>No open requests match your blood group and city right now. You'll see them here when someone needs help.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <p class="disclaimer-banner">
+    These opportunities are <strong>potential leads only</strong>. Donating blood
+    requires eligibility screening by qualified medical professionals — this app
+    does not confirm eligibility or availability.
+  </p>
+</section>
+{% endblock %}

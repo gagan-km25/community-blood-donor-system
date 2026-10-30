@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Requester dashboard — BloodConnect{% endblock %}
+
+{% block content %}
+<section class="container section">
+  <header class="page-header page-header-row">
+    <div>
+      <h1>Requester dashboard</h1>
+      <p class="muted">Welcome, {{ user.username }}. Here is everything about your blood requests.</p>
+    </div>
+    <a href="{% url 'blood_requests:create_request' %}" class="btn btn-primary">+ New request</a>
+  </header>
+
+  <div class="grid grid-4 stat-grid">
+    <div class="stat-card stat-card-page"><span class="stat-value">{{ stats.total }}</span><span class="stat-label">Total requests</span></div>
+    <div class="stat-card stat-card-page"><span class="stat-value">{{ stats.active }}</span><span class="stat-label">In progress</span></div>
+    <div class="stat-card stat-card-page"><span class="stat-value">{{ stats.open }}</span><span class="stat-label">Open</span></div>
+    <div class="stat-card stat-card-page"><span class="stat-value">{{ stats.fulfilled }}</span><span class="stat-label">Fulfilled</span></div>
+  </div>
+
+  <h2 class="section-title">My requests</h2>
+  {% if requests_list %}
+    <div class="card table-card">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th scope="col">Blood</th>
+            <th scope="col">Units</th>
+            <th scope="col">Hospital</th>
+            <th scope="col">Urgency</th>
+            <th scope="col">Needed by</th>
+            <th scope="col">Status</th>
+            <th scope="col"><span class="visually-hidden">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for req in requests_list %}
+            <tr>
+              <td><span class="blood-chip">{{ req.blood_group }}</span></td>
+              <td>{{ req.units_fulfilled }}/{{ req.units_needed }}</td>
+              <td>{{ req.hospital_name }}<br><span class="muted">{{ req.hospital_city }}</span></td>
+              <td><span class="badge badge-{{ req.urgency }}">{{ req.get_urgency_display }}</span></td>
+              <td>{{ req.needed_by|date:"d M Y, H:i" }}</td>
+              <td>{% include "partials/_status_badge.html" with status=req.status label=req.get_status_display %}</td>
+              <td><a href="{% url 'blood_requests:request_detail' req.pk %}" class="btn btn-outline btn-sm">View</a></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="empty-state card">
+      <span class="empty-icon" aria-hidden="true">📋</span>
+      <h2>No requests yet</h2>
+      <p>When you need blood, create a request and the community can respond.</p>
+      <a href="{% url 'blood_requests:create_request' %}" class="btn btn-primary">Create your first request</a>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

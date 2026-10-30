@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Administrator dashboard — BloodConnect{% endblock %}
+
+{% block content %}
+<section class="container section">
+  <header class="page-header page-header-row">
+    <div>
+      <h1>Administrator dashboard</h1>
+      <p class="muted">All figures are computed live from the database.</p>
+    </div>
+    <a href="{% url 'admin:index' %}" class="btn btn-outline">Open Django admin</a>
+  </header>
+
+  <div class="grid grid-5 stat-grid">
+    <div class="stat-card stat-card-page"><span class="stat-value">{{ stats.total_users }}</span><span class="stat-label">Registered users</span></div>
+    <div class="stat-card stat-card-page"><span class="stat-value">{{ stats.active_donors }}</span><span class="stat-label">Active donors</span></div>
+    <div class="stat-card stat-card-page"><span class="stat-value">{{ stats.open_requests }}</span><span class="stat-label">Open requests</span></div>
+    <div class="stat-card stat-card-page"><span class="stat-value">{{ stats.fulfilled_requests }}</span><span class="stat-label">Fulfilled requests</span></div>
+    <div class="stat-card stat-card-page"><span class="stat-value">{{ stats.pending_reports }}</span><span class="stat-label">Pending reports</span></div>
+  </div>
+
+  <div class="grid grid-2">
+    <div class="card">
+      <h2>Pending abuse reports</h2>
+      {% if pending_reports %}
+        <ul class="report-list">
+          {% for report in pending_reports %}
+            <li>
+              <div class="report-info">
+                <strong>Request #{{ report.request_id }}</strong>
+                <span class="muted">{{ report.request.blood_group }} · {{ report.request.hospital_city }}</span>
+                <p class="report-reason">“{{ report.reason|truncatechars:140 }}”</p>
+                <span class="muted">Reported by {{ report.reported_by.username }}</span>
+              </div>
+              <div class="btn-col">
+                <form method="post" action="{% url 'dashboard:resolve_abuse_report' report.pk %}" class="inline-form"
+                      data-confirm="Mark this report as reviewed?">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="reviewed">
+                  <button type="submit" class="btn btn-primary btn-sm">Mark reviewed</button>
+                </form>
+                <form method="post" action="{% url 'dashboard:resolve_abuse_report' report.pk %}" class="inline-form"
+                      data-confirm="Dismiss this report?">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="dismissed">
+                  <button type="submit" class="btn btn-danger-outline btn-sm">Dismiss</button>
+                </form>
+              </div>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <div class="empty-state"><p>No pending abuse reports. 🎉</p></div>
+      {% endif %}
+    </div>
+
+    <div class="card">
+      <h2>Recent status changes (audit)</h2>
+      {% if recent_history %}
+        <ul class="audit-list">
+          {% for h in recent_history %}
+            <li>
+              Request #{{ h.request_id }}:
+              <strong>{{ h.get_from_status_display }} → {{ h.get_to_status_display }}</strong>
+              <span class="muted">· {% if h.changed_by %}{{ h.changed_by.username }}{% else %}system{% endif %} · {{ h.created_at|date:"d M, H:i" }}</span>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="muted">No status changes yet.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="grid grid-2">
+    <div class="card">
+      <h2>Newest users</h2>
+      <ul class="audit-list">
+        {% for u in recent_users %}
+          <li>{{ u.username }} <span class="muted">joined {{ u.date_joined|date:"d M Y" }}{% if u.is_staff %} · staff{% endif %}</span></li>
+        {% endfor %}
+      </ul>
+    </div>
+    <div class="card">
+      <h2>Latest requests</h2>
+      <ul class="audit-list">
+        {% for req in recent_requests %}
+          <li>
+            <a href="{% url 'blood_requests:request_detail' req.pk %}">Request #{{ req.pk }}</a> —
+            {{ req.blood_group }} × {{ req.units_needed }} at {{ req.hospital_city }}
+            {% include "partials/_status_badge.html" with status=req.status label=req.get_status_display %}
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <p class="muted section-top">
+    Manage users, donor profiles, requests, and reports in full via
+    <a href="{% url 'admin:index' %}">Django admin</a>.
+  </p>
+</section>
+{% endblock %}

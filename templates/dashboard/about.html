@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}About — BloodConnect{% endblock %}
+
+{% block content %}
+<section class="container section">
+  <div class="card prose-card">
+    <h1>About this project</h1>
+    <p>
+      <strong>BloodConnect</strong> is a Community Blood Donor and Emergency Request
+      System built as a college mini project. It helps a local community keep a list
+      of willing blood donors and manage emergency blood requests in one place.
+    </p>
+
+    <h2>What it does</h2>
+    <ul>
+      <li>Secure registration, login, and role-based dashboards.</li>
+      <li>Donor profiles with blood group, city, availability, and contact-sharing consent.</li>
+      <li>Public donor search with preliminary blood-group compatibility filtering.</li>
+      <li>Emergency blood requests with a tracked lifecycle:
+          Open → Matched → Partially Fulfilled → Fulfilled, plus Cancelled and Expired.</li>
+      <li>A status history (audit trail) for every request change.</li>
+      <li>Administrator dashboard with live statistics and abuse-report review.</li>
+    </ul>
+
+    <h2>What it is <em>not</em></h2>
+    <ul>
+      <li>It is <strong>not</strong> an emergency dispatch service — in an emergency,
+          call local emergency services or go to the nearest hospital.</li>
+      <li>It does <strong>not</strong> confirm medical eligibility, clinical
+          compatibility, or real blood availability. Every match is a
+          <strong>potential lead</strong> that healthcare professionals must verify.</li>
+      <li>It does not store medical records, and it never shares a donor's phone
+          number unless the donor explicitly consented and the viewer is logged in.</li>
+    </ul>
+
+    <h2>Technology</h2>
+    <p>
+      Python Django (server-rendered templates), HTML5/CSS3/vanilla JavaScript on the
+      front end, and SQLite for storage — fully runnable on a standard Windows laptop
+      with no database installation.
+    </p>
+    <p class="muted">All demonstration data in this project is synthetic.</p>
+  </div>
+</section>
+{% endblock %}

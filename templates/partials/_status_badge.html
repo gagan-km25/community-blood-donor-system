@@ -1,0 +1,6 @@
+{% comment %}
+Coloured status badge.
+Expects: status (raw value, e.g. "open") and label (display text).
+Usage: {% include "partials/_status_badge.html" with status=r.status label=r.get_status_display %}
+{% endcomment %}
+<span class="badge badge-{{ status }}">{{ label }}</span>

@@ -1,0 +1,113 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Community Blood Donor and Emergency Request System — find potential donors, post emergency blood requests, and track them.">
+  <title>{% block title %}BloodConnect — Community Blood Donor System{% endblock %}</title>
+  <link rel="icon" href="{% static 'images/favicon.svg' %}" type="image/svg+xml">
+  <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
+  <header class="site-header">
+    <nav class="navbar container" aria-label="Main navigation">
+      <a class="brand" href="{% url 'dashboard:home' %}">
+        <svg class="brand-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M12 2C12 2 5 10.5 5 15a7 7 0 0 0 14 0C19 10.5 12 2 12 2Z" fill="currentColor"/>
+          <path d="M9.5 15.5a3.5 3.5 0 0 0 3.5 3.5" stroke="#fff" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+        </svg>
+        <span>Blood<em>Connect</em></span>
+      </a>
+
+      <button class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="nav-links" aria-label="Toggle navigation menu">
+        <span></span><span></span><span></span>
+      </button>
+
+      <div class="nav-links" id="nav-links">
+        <a href="{% url 'dashboard:home' %}">Home</a>
+        <a href="{% url 'donors:search' %}">Donor Search</a>
+        {% if user.is_authenticated %}
+          <a href="{% url 'blood_requests:requests_board' %}">Request Board</a>
+          <a href="{% url 'blood_requests:my_requests' %}">My Requests</a>
+          {% if not user.donor_profile %}
+            <a href="{% url 'donors:my_profile_create' %}">Become a Donor</a>
+          {% endif %}
+          <a href="{% url 'dashboard:dashboard_entry' %}">My Dashboard</a>
+          {% if user.is_staff %}
+            <a href="{% url 'dashboard:admin_dashboard' %}" class="nav-admin">Admin</a>
+          {% endif %}
+          <div class="nav-user">
+            <span class="nav-username" title="{{ user.username }}">{{ user.username }}</span>
+            <form method="post" action="{% url 'accounts:logout' %}" class="inline-form">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-outline btn-sm">Log out</button>
+            </form>
+          </div>
+        {% else %}
+          <a href="{% url 'dashboard:about' %}">About</a>
+          <div class="nav-user">
+            <a href="{% url 'accounts:login' %}" class="btn btn-outline btn-sm">Log in</a>
+            <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-sm">Register</a>
+          </div>
+        {% endif %}
+      </div>
+    </nav>
+  </header>
+
+  <main id="main-content" class="site-main">
+    {% if messages %}
+      <div class="container messages" role="status" aria-live="polite">
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible">
+            <span>{{ message }}</span>
+            <button type="button" class="alert-close" aria-label="Dismiss message">&times;</button>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div>
+        <h3>BloodConnect</h3>
+        <p class="footer-muted">
+          A community platform that connects voluntary blood donors with people
+          and healthcare facilities seeking blood.
+        </p>
+      </div>
+      <div>
+        <h3>Quick links</h3>
+        <ul class="footer-links">
+          <li><a href="{% url 'donors:search' %}">Find donors</a></li>
+          {% if user.is_authenticated %}
+            <li><a href="{% url 'blood_requests:create_request' %}">Create a request</a></li>
+            <li><a href="{% url 'blood_requests:requests_board' %}">Request board</a></li>
+          {% else %}
+            <li><a href="{% url 'accounts:register' %}">Register</a></li>
+          {% endif %}
+          <li><a href="{% url 'dashboard:about' %}">About this project</a></li>
+        </ul>
+      </div>
+      <div class="footer-emergency">
+        <h3>⚠ Emergency notice</h3>
+        <p>
+          This platform shows <strong>potential donor leads only</strong>. It does not
+          confirm medical eligibility, compatibility, or blood availability.
+          In a real emergency, contact your <strong>local emergency services</strong>
+          or go to the <strong>nearest hospital</strong> immediately.
+        </p>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      <p>© 2026 BloodConnect — college mini project with synthetic data only.</p>
+    </div>
+  </footer>
+
+  <script src="{% static 'js/main.js' %}"></script>
+</body>
+</html>

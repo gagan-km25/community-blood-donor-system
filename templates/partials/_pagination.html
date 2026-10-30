@@ -1,0 +1,19 @@
+{% comment %}
+Pagination controls. Expects: page_obj (Django Page).
+Preserves other GET parameters (filters) across pages.
+{% endcomment %}
+{% if page_obj.paginator.num_pages > 1 %}
+<nav class="pagination" aria-label="Search result pages">
+  {% if page_obj.has_previous %}
+    <a class="btn btn-outline btn-sm"
+       href="?{% for k, v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v }}&amp;{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}">
+       &larr; Previous</a>
+  {% endif %}
+  <span class="pagination-info">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+  {% if page_obj.has_next %}
+    <a class="btn btn-outline btn-sm"
+       href="?{% for k, v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v }}&amp;{% endif %}{% endfor %}page={{ page_obj.next_page_number }}">
+       Next &rarr;</a>
+  {% endif %}
+</nav>
+{% endif %}

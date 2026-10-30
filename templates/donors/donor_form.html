@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}{% if is_edit %}Edit donor profile{% else %}Become a donor{% endif %} — BloodConnect{% endblock %}
+
+{% block content %}
+<section class="auth-wrap container">
+  <div class="card form-card">
+    <h1>{% if is_edit %}Edit your donor profile{% else %}Become a blood donor{% endif %}</h1>
+
+    {% if not is_edit %}
+      <p class="muted">
+        Your profile (name, blood group, city, availability) may appear in public
+        donor search. Your <strong>phone number stays private</strong> unless you
+        enable contact sharing below.
+      </p>
+    {% endif %}
+
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {% for field in form %}
+        <div class="form-field">
+          <label for="{{ field.id_for_label }}">
+            {{ field.label }}{% if field.field.required %} <span class="required" aria-hidden="true">*</span>{% endif %}
+          </label>
+          {{ field }}
+          {% if field.help_text %}<p class="field-help">{{ field.help_text }}</p>{% endif %}
+          {% for error in field.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+        </div>
+      {% endfor %}
+
+      <button type="submit" class="btn btn-primary btn-block">
+        {% if is_edit %}Save changes{% else %}Create donor profile{% endif %}
+      </button>
+    </form>
+  </div>
+</section>
+{% endblock %}

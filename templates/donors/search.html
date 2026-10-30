@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Donor search — BloodConnect{% endblock %}
+
+{% block content %}
+<section class="container section">
+  <header class="page-header">
+    <h1>Find potential blood donors</h1>
+    <p class="muted">
+      Preliminary search only — every result is a <strong>potential lead</strong>,
+      not a confirmation of eligibility or availability.
+    </p>
+  </header>
+
+  <form method="get" class="card filter-bar" aria-label="Donor search filters">
+    <div class="form-field">
+      <label for="{{ form.blood_group.id_for_label }}">Blood group</label>
+      {{ form.blood_group }}
+    </div>
+    <div class="form-field">
+      <label for="{{ form.city.id_for_label }}">City</label>
+      {{ form.city }}
+    </div>
+    <div class="form-field">
+      <label for="{{ form.availability.id_for_label }}">Availability</label>
+      {{ form.availability }}
+    </div>
+    <div class="form-field filter-actions">
+      <button type="submit" class="btn btn-primary">Search</button>
+      <a href="{% url 'donors:search' %}" class="btn btn-outline">Clear</a>
+    </div>
+  </form>
+
+  {% if searched %}
+    <p class="muted results-count">
+      {{ page_obj.paginator.count }} donor{{ page_obj.paginator.count|pluralize }} found.
+    </p>
+  {% endif %}
+
+  {% if results %}
+    <div class="grid grid-4 donor-grid">
+      {% for item in results %}
+        {% with p=item.profile %}
+          <article class="card donor-card">
+            <div class="blood-drop-badge" aria-hidden="true">{{ p.blood_group }}</div>
+            <h3>{{ p.full_name }}</h3>
+            <p class="muted">📍 {{ p.city }}</p>
+            <p>
+              {% if p.is_available %}
+                <span class="badge badge-fulfilled">Available</span>
+              {% else %}
+                <span class="badge badge-cancelled">Unavailable</span>
+              {% endif %}
+            </p>
+            <p class="donor-phone">
+              {% if item.show_phone %}
+                📞 <a href="tel:{{ p.phone }}">{{ p.phone }}</a>
+              {% elif p.contact_consent %}
+                <span class="muted">📞 Contact hidden — <a href="{% url 'accounts:login' %}">log in</a> to view</span>
+              {% else %}
+                <span class="muted">📞 Contact not shared</span>
+              {% endif %}
+            </p>
+          </article>
+        {% endwith %}
+      {% endfor %}
+    </div>
+
+    {% include "partials/_pagination.html" %}
+  {% elif searched %}
+    <div class="empty-state card">
+      <span class="empty-icon" aria-hidden="true">🔍</span>
+      <h2>No donors match your filters</h2>
+      <p>Try a different blood group or a nearby city, or clear the filters to see all active donors.</p>
+      <a href="{% url 'donors:search' %}" class="btn btn-outline">Clear filters</a>
+    </div>
+  {% else %}
+    <div class="empty-state card">
+      <span class="empty-icon" aria-hidden="true">🩸</span>
+      <h2>Start searching</h2>
+      <p>Use the filters above to find potential donors by blood group and city.</p>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,24 @@
+# Virtual environment
+.venv/
+venv/
+
+# Environment secrets (use .env.example as the template)
+.env
+
+# Local SQLite database (synthetic demo data only)
+db.sqlite3
+db.sqlite3-journal
+
+# Python caches
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Django test artifacts
+*.log
+
+# Editor/OS noise
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

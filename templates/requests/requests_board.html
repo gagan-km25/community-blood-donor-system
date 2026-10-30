@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Request board — BloodConnect{% endblock %}
+
+{% block content %}
+<section class="container section">
+  <header class="page-header">
+    <h1>Community request board</h1>
+    <p class="muted">
+      Open requests from the community, most urgent first. Contact details and
+      patient names stay private — use donor search to find leads and contact the
+      requester through your own channels.
+    </p>
+  </header>
+
+  <p class="disclaimer-banner">
+    ⚠ These requests are posted by community members and are <strong>not verified
+    by hospitals</strong>. In a real emergency, rely on local emergency services.
+  </p>
+
+  {% if requests_list %}
+    <div class="board-list">
+      {% for req in requests_list %}
+        <article class="card board-card">
+          <div class="board-main">
+            <span class="blood-chip blood-chip-lg">{{ req.blood_group }}</span>
+            <div class="board-info">
+              <h3>{{ req.hospital_name }} <span class="muted">· {{ req.hospital_city }}</span></h3>
+              <p class="muted">
+                Needs {{ req.units_needed }} unit{{ req.units_needed|pluralize }} by
+                <strong>{{ req.needed_by|date:"d M Y, H:i" }}</strong>
+                {% if req.requester_id == user.pk %}<span class="badge badge-open">Your request</span>{% endif %}
+              </p>
+            </div>
+            <span class="badge badge-{{ req.urgency }}">{{ req.get_urgency_display }}</span>
+          </div>
+
+          {% if req.requester_id != user.pk and req.pk not in reported_ids %}
+            <details class="report-details">
+              <summary>Report this request</summary>
+              <form method="post" action="{% url 'blood_requests:report_request' req.pk %}" class="report-form">
+                {% csrf_token %}
+                <label for="reason-{{ req.pk }}" class="visually-hidden">Reason for reporting</label>
+                <textarea id="reason-{{ req.pk }}" name="reason" rows="2" maxlength="1000"
+                          placeholder="Why are you reporting this request?" required></textarea>
+                <button type="submit" class="btn btn-danger-outline btn-sm">Submit report</button>
+              </form>
+            </details>
+          {% elif req.pk in reported_ids %}
+            <p class="muted report-note">You have reported this request — an administrator will review it.</p>
+          {% endif %}
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state card">
+      <span class="empty-icon" aria-hidden="true">🎉</span>
+      <h2>No open requests</h2>
+      <p>The community board is clear right now.</p>
+      <a href="{% url 'blood_requests:create_request' %}" class="btn btn-primary">Create a request</a>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}
